@@ -93,6 +93,11 @@ class LinearLayer(Layer):
         n_out is the number of output variables."""
         self.W = np.random.randn(n_in, n_out)/np.sqrt(n_out)
         self.b = np.random.randn(n_out)
+        self.n_in = n_in
+        self.n_out = n_out
+
+    def __str__(self):
+        return "Linear Layer: " + str(self.n_in) + ", " + str(self.n_out)
 
     def get_params_iter(self):
         """Return an iterator over the parameters."""
@@ -116,6 +121,9 @@ class LinearLayer(Layer):
 
 class ReluLayer(Layer):
     """Relu layer performs relu activation to its input."""
+    def __str__(self):
+        return "Relu Layer"
+
     def get_output(self, X):
         return relu(X)
 
@@ -127,9 +135,12 @@ class ReluLayer(Layer):
 class SoftmaxOutputLayer(Layer):
     """Softmax output layer computes the classification propabilities at the output."""
 
+    def __str__(self):
+        return "Softmax Layer"
+
     def get_output(self, X):
         """Perform the forward step transformation."""
-        return softmax(X)
+        return softmax_stable(X)
 
     def get_input_grad(self, Y, T):
         """Return the gradient at the inputs of this layer."""

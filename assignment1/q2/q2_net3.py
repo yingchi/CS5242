@@ -17,7 +17,7 @@ if __name__ == "__main__":
     layers = build_layers(layer_dims)
 
     (num_batches, minibatch_costs, train_costs, validation_costs, train_accuracies, validation_accuracies) = \
-        train_minibatch_SGD(X_train, T_train, X_validation, T_validation, layers, learning_rate=0.01)
+        train_minibatch_SGD(X_train, T_train, X_validation, T_validation, layers, learning_rate=0.001)
     num_iterations = len(train_costs)
 
     test_cost, test_accuracy = get_cost_accuracy(X_test, T_test, layers)
