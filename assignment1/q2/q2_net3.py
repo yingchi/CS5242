@@ -23,5 +23,5 @@ if __name__ == "__main__":
     test_cost, test_accuracy = get_cost_accuracy(X_test, T_test, layers)
     print('The final accuracy on the test set is {:.4f}'.format(test_accuracy))
 
-    plot_costs(minibatch_costs, train_costs, validation_costs, num_iterations, num_batches, "net3_cost.png")
-    plot_accuracys(train_accuracies, validation_accuracies, num_iterations, "net3_acc.png")
+    plot_costs(minibatch_costs, train_costs, validation_costs, num_iterations, num_batches, "./output/net3_cost.png")
+    plot_accuracys(train_accuracies, validation_accuracies, num_iterations, "./output/net3_acc.png")

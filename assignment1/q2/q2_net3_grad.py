@@ -2,13 +2,13 @@ from q2_ref import *
 import csv
 
 if __name__ == "__main__":
-    w_path = "./data/c/w-100-40-4.csv"
-    b_path = "./data/c/b-100-40-4.csv"
+    w_path = "./data/c/w-14-28-4.csv"
+    b_path = "./data/c/b-14-28-4.csv"
 
     X_train = np.array([[-1, 1, 1, 1, -1, -1, 1, -1, 1, 1, -1, -1, 1, 1]]).astype(np.float128)
     T_train = np.array([[0, 0, 0, 1]])
     layer_dims = [X_train.shape[1]]
-    layer_dims.extend([100, 40])
+    layer_dims.extend([14] * 28)
     layer_dims.extend([T_train.shape[1]])
     layers = build_layers(layer_dims)
 
@@ -40,13 +40,13 @@ if __name__ == "__main__":
     activations = forward_step(X_train, layers)
     param_grads = backward_step(activations, T_train, layers)
 
-    with open('./output/dW-100-40-4.csv', 'w') as csvfile:
+    with open('./output/dW-14-28-4.csv', 'w') as csvfile:
         myWriter = csv.writer(csvfile)
         for j in range((len(layers) // 2)):
             for i in range(layers[j * 2].W.shape[0]):
                 myWriter.writerow(param_grads[j * 2][(i * layers[j * 2].W.shape[1]):((i + 1) * layers[j * 2].W.shape[1])])
 
-    with open('./output/db-100-40-4.csv', 'w') as csvfile:
+    with open('./output/db-14-28-4.csv', 'w') as csvfile:
         myWriter = csv.writer(csvfile)
 
         for i in range((len(layers) // 2)):

@@ -21,6 +21,14 @@ def convert_to_onehot(Y, C):
 def relu(z):
     return np.maximum(0, z)
 
+def leaky_relu(z, alpha=0.01):
+    return np.where(z > 0, z, z * alpha)
+
+def leaky_relu_deriv(y, alpha=0.01):
+    dy = np.ones_like(y)
+    dy[y < 0] = alpha
+    return dy
+
 def softmax(z):
     """
     Calculate the softmax over n input samples
@@ -274,7 +282,6 @@ def plot_costs(minibatch_costs, training_costs, validation_costs, nb_of_iteratio
     plt.savefig(filename)
     plt.close()
 
-
 def plot_accuracys(train_accuracys, validation_accuracys, nb_of_iterations, filename):
     # Plot the minibatch, full training set, and validation costs
     iteration_x_inds = np.linspace(1, nb_of_iterations, num=nb_of_iterations)
@@ -329,7 +336,7 @@ def get_cost_accuracy(X, T, layers):
     return (cost, accuracy)
 
 
-def train_minibatch_SGD(X_train, T_train, X_validation, T_validation, layers, batch_size = 50, max_num_iterations = 100, learning_rate=0.001):
+def train_minibatch_SGD(X_train, T_train, X_validation, T_validation, layers, batch_size = 32, max_num_iterations = 150, learning_rate=0.001):
     num_batchs = X_train.shape[0]  // batch_size + 1
     XT_batches = list(zip(np.array_split(X_train, num_batchs, axis=0), np.array_split(T_train, num_batchs, axis=0)))
 
