@@ -2,7 +2,8 @@ import pandas as pd
 import numpy as np
 import collections
 import itertools
-from sklearn import model_selection, metrics
+from sklearn import metrics
+from sklearn.model_selection import train_test_split
 import matplotlib.pyplot as plt
 
 
@@ -24,6 +25,9 @@ def relu(z):
 def leaky_relu(z, alpha=0.01):
     return np.where(z > 0, z, z * alpha)
 
+def relu_deriv(y):
+    return (y > 0).astype(int)*1.0
+
 def leaky_relu_deriv(y, alpha=0.01):
     dy = np.ones_like(y)
     dy[y < 0] = alpha
@@ -40,7 +44,6 @@ def softmax(z):
     s = z_exp / z_sum
     return s
 
-
 def softmax_stable(z):
     """
     Compute the softmax of vector x in a numerically stable way.
@@ -51,44 +54,46 @@ def softmax_stable(z):
     s = z_exp / z_sum
     return s
 
-def relu_deriv(y):
-    return (y > 0).astype(int)*1.0
-
-
 # ====================
 # Define Layer Objects
 # ====================
 
 class Layer(object):
-    """Base class for the different layers。"""
+    """Base class for the different layers."""
 
     def get_params_iter(self):
-        """Return an iterator over the parameters (if any).
+        """
+        Return an iterator over the parameters (if any).
         The iterator has the same order as get_params_grad.
-        The elements returned by the iterator are editable in-place."""
+        The elements returned by the iterator are editable in-place.
+        """
         return []
 
     def get_params_grad(self, X, output_grad):
-        """Return a list of gradients over the parameters.
+        """"
+        Return a list of gradients over the parameters.
         The list has the same order as the get_params_iter iterator.
-        X is the input.
-        output_grad is the gradient at the output of this layer.
+
+        :param X: the input
+        :param output_grad: the gradient at the output of this layer
+        :return: a list of gradients over the parameters
         """
         return []
 
     def get_output(self, X):
-        """Perform the forward step linear transformation.
-        X is the input."""
+        """ Perform the forward step linear transformation."""
         pass
 
     def get_input_grad(self, Y, output_grad=None, T=None):
         """
         Return the gradient at the inputs of this layer.
 
-        @param Y the pre-computed output of this layer (not needed in this case).
-        @param output_grad the gradient at the output of this layer
+        :param Y: the pre-computed output of this layer (not needed in this case).
+        :param output_grad: the gradient at the output of this layer
          (gradient at input of next layer).
-        @param T will be assigned if used for Output layer; the gradient will be based on the output error instead of output_grad"""
+        :param T: will be assigned if used for Output layer;
+        the gradient will be based on the output error instead of output_grad
+        """
         pass
 
 
@@ -96,9 +101,12 @@ class LinearLayer(Layer):
     """Linear layer performs a linear transformation to its input."""
 
     def __init__(self, n_in, n_out):
-        """Initialize hidden layer parameters.
-        n_in is the number of input variables.
-        n_out is the number of output variables."""
+        """
+        Initialize hidden layer parameters.
+
+        :param n_in: the number of input variables.
+        :param n_out: the number of output variables.
+        """
         self.W = np.random.randn(n_in, n_out)/np.sqrt(n_out)
         self.b = np.random.randn(n_out)
         self.n_in = n_in
@@ -166,9 +174,9 @@ def forward_step(input_samples, layers):
     """
     Compute the forward activations of each layer.
 
-    @param input_samples: a matrix of input samples (each row is an input vector)
-    @param layers: a list of layers
-    @returns a list of activations. activations[0] contains the input
+    :param input_samples: a matrix of input samples (each row is an input vector)
+    :param layers: a list of layers
+    :return: a list of activations. activations[0] contains the input
     """
     activations = [input_samples]
 
@@ -183,34 +191,39 @@ def forward_step(input_samples, layers):
 def backward_step(activations, targets, layers):
     """
     Perform the backpropagation step over all the layers and return the parameter gradients.
-    @param activations: A list of forward step activations where the activation at
+
+    :param activations: A list of forward step activations where the activation at
         each index i+1 corresponds to the activation of layer i in layers.
         activations[0] contains the input samples.
-    @param targets: The output targets of the output layer.
-    @param layers: A list of Layers corresponding that generated the outputs in activations.
-    @returns A list of parameter gradients where the gradients at each index corresponds to
+    :param targets: The output targets of the output layer.
+    :param layers: A list of Layers corresponding that generated the outputs in activations.
+    :return: A list of parameter gradients where the gradients at each index corresponds to
         the parameters gradients of the layer at the same index in layers.
     """
     param_grads = collections.deque()  # List of parameter gradients for each layer
     output_grad = None  # The error gradient at the output of the current layer
+
     # Propagate the error backwards through all the layers.
-    #  Use reversed to iterate backwards over the list of layers.
+    # Use reversed to iterate backwards over the list of layers.
     for layer in reversed(layers):
-        Y = activations.pop()  # Get the activations of the last layer on the stack
-        # Compute the error at the output layer.
+        Y = activations.pop()
+
         # The output layer error is calculated different then hidden layer error.
         if output_grad is None:
             input_grad = layer.get_input_grad(Y, targets)
-        else:  # output_grad is not None (layer is not output layer)
+        else:
             input_grad = layer.get_input_grad(Y, output_grad)
+
         # Get the input of this layer (activations of the previous layer)
         X = activations[-1]
+
         # Compute the layer parameter gradients used to update the parameters
         grads = layer.get_params_grad(X, output_grad)
         param_grads.appendleft(grads)
+
         # Compute gradient at output of previous layer (input of current layer):
         output_grad = input_grad
-    return list(param_grads)  # Return the parameter gradients
+    return list(param_grads)
 
 
 def update_params(layers, param_grads, learning_rate):
@@ -263,47 +276,38 @@ def gradient_check(X_train, T_train, layers):
 # Plotting functions
 # ==================
 def plot_costs(minibatch_costs, training_costs, validation_costs, nb_of_iterations, nb_of_batches, filename):
-    # Plot the minibatch, full training set, and validation costs
     minibatch_x_inds = np.linspace(0, nb_of_iterations, num=nb_of_iterations * nb_of_batches)
     iteration_x_inds = np.linspace(1, nb_of_iterations, num=nb_of_iterations)
-    # Plot the cost over the iterations
     plt.plot(minibatch_x_inds, minibatch_costs, 'k-', linewidth=0.5, label='cost minibatches')
     plt.plot(iteration_x_inds, training_costs, 'r-', linewidth=2, label='cost full training set')
     plt.plot(iteration_x_inds, validation_costs, 'b-', linewidth=3, label='cost validation set')
-    # Add labels to the plot
     plt.xlabel('iteration')
     plt.ylabel('$\\xi$', fontsize=15)
     plt.title('Decrease of cost over backprop iteration')
     plt.legend()
-    # x1, x2, y1, y2 = plt.axis()
     plt.axis((0, nb_of_iterations, 0, 2.5))
     plt.grid()
-    # plt.show()
     plt.savefig(filename)
     plt.close()
 
+
 def plot_accuracys(train_accuracys, validation_accuracys, nb_of_iterations, filename):
-    # Plot the minibatch, full training set, and validation costs
     iteration_x_inds = np.linspace(1, nb_of_iterations, num=nb_of_iterations)
-    # Plot the cost over the iterations
     plt.plot(iteration_x_inds, train_accuracys, 'r-', linewidth=2, label='acc. full training set')
     plt.plot(iteration_x_inds, validation_accuracys, 'b-', linewidth=3, label='acc. validation set')
-    # Add labels to the plot
     plt.xlabel('iteration')
     plt.ylabel('accuracy')
     plt.title('Increase of accuracy over backprop iteration')
     plt.legend(loc=4)
-    # x1, x2, y1, y2 = plt.axis()
     plt.axis((0, nb_of_iterations, 0, 1.0))
     plt.grid()
-    # plt.show()
     plt.savefig(filename)
     plt.close()
+
 
 # =================
 # Process functions
 # =================
-
 def prepare_data(x_train_path, y_train_path, x_test_path, y_test_path):
     # Prepare data for NN training
     X_train_all = readin(x_train_path)
@@ -312,10 +316,21 @@ def prepare_data(x_train_path, y_train_path, x_test_path, y_test_path):
     X_test = readin(x_test_path)
     Y_test = readin(y_test_path)
     T_test = convert_to_onehot(Y_test, 4).T
-    X_train, X_validation, T_train, T_validation = model_selection.train_test_split(X_train_all, T_train_all, test_size=0.3, random_state=42)
+    X_train, X_validation, T_train, T_validation = \
+        train_test_split(X_train_all, T_train_all, test_size=0.3, random_state=42)
     return (X_train, X_validation,  X_test, T_train, T_validation, T_test)
 
+
 def build_layers(layer_dims):
+    """
+    Build NN layers based on the layer_dims given.
+    The network built by this function is fixed to have Relu activations in the middle,
+    and a softmax output layer.
+
+    :param layer_dims: a list of integers for the number of neurons in each layer.
+        The 1st element in the list is the dimension of input layer
+    :return: a list of Layer() objects
+    """
     out_dim = layer_dims.pop()
     layers = []
     for i in range(len(layer_dims)-1):
@@ -325,6 +340,7 @@ def build_layers(layer_dims):
     layers.append(SoftmaxOutputLayer())
 
     return layers
+
 
 def get_cost_accuracy(X, T, layers):
     y_true = np.argmax(T, axis=1)
@@ -336,7 +352,8 @@ def get_cost_accuracy(X, T, layers):
     return (cost, accuracy)
 
 
-def train_minibatch_SGD(X_train, T_train, X_validation, T_validation, layers, batch_size = 32, max_num_iterations = 150, learning_rate=0.001):
+def train_minibatch_SGD(X_train, T_train, X_validation, T_validation, layers,
+                        batch_size = 32, max_num_iterations = 150, learning_rate=0.001):
     num_batchs = X_train.shape[0]  // batch_size + 1
     XT_batches = list(zip(np.array_split(X_train, num_batchs, axis=0), np.array_split(T_train, num_batchs, axis=0)))
 
@@ -367,7 +384,7 @@ def train_minibatch_SGD(X_train, T_train, X_validation, T_validation, layers, ba
 
         if len(validation_costs) > 5:
             # Stop training if the cost on the validation set doesn't decrease
-            #  for 3 iterations
+            # for 5 iterations
             if validation_costs[-1] >= validation_costs[-2] >= validation_costs[-3] >= \
                     validation_costs[-4] >= validation_costs[-5]:
                 break

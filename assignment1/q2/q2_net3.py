@@ -17,11 +17,12 @@ if __name__ == "__main__":
     layers = build_layers(layer_dims)
 
     (num_batches, minibatch_costs, train_costs, validation_costs, train_accuracies, validation_accuracies) = \
-        train_minibatch_SGD(X_train, T_train, X_validation, T_validation, layers, learning_rate=0.001)
+        train_minibatch_SGD(X_train, T_train, X_validation, T_validation, layers,
+                            learning_rate=0.01)
     num_iterations = len(train_costs)
 
     test_cost, test_accuracy = get_cost_accuracy(X_test, T_test, layers)
     print('The final accuracy on the test set is {:.4f}'.format(test_accuracy))
 
-    plot_costs(minibatch_costs, train_costs, validation_costs, num_iterations, num_batches, "./output/net3_cost.png")
-    plot_accuracys(train_accuracies, validation_accuracies, num_iterations, "./output/net3_acc.png")
+    plot_costs(minibatch_costs, train_costs, validation_costs, num_iterations, num_batches, "./net3_cost.png")
+    plot_accuracys(train_accuracies, validation_accuracies, num_iterations, "./net3_acc.png")
