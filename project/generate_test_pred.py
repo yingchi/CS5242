@@ -5,11 +5,13 @@ from keras.models import load_model
 from read_testing_pdb_file import read_pdb
 from train_cnn_model import point_within_vox, convert_xyz_to_vox
 
+DATA_DIR='./testing_data/'
+
 
 def create_data_rec(pro, lig, label,
                     pro_list, lig_list, label_list, width, unit):
     file_name = "{}_{}_cg.pdb".format(("0000" + str(lig))[-4:], "lig")
-    X_list, Y_list, Z_list, atomtype_list = read_pdb("./testing_data/{}".format(file_name))
+    X_list, Y_list, Z_list, atomtype_list = read_pdb(DATA_DIR + file_name)
     x0 = floor(np.mean(X_list))
     y0 = floor(np.mean(Y_list))
     z0 = floor(np.mean(Z_list))
@@ -20,7 +22,7 @@ def create_data_rec(pro, lig, label,
     lig_list.append(convert_xyz_to_vox(use_atoms, x0 - width, x0 + width, y0 - width,
                                        y0 + width, z0 - width, z0 + width, unit))
     file_name = "{}_{}_cg.pdb".format(("0000" + str(pro))[-4:], "pro")
-    X_list, Y_list, Z_list, atomtype_list = read_pdb("./testing_data/{}".format(file_name))
+    X_list, Y_list, Z_list, atomtype_list = read_pdb(DATA_DIR + file_name)
     all_atoms = list(zip(X_list, Y_list, Z_list, atomtype_list))
     use_atoms = [x for x in all_atoms if point_within_vox((x[0], x[1], x[2]),
                                                           x0 - width, x0 + width, y0 - width,
